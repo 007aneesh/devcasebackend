@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String
+  username   String    @unique
+  email      String    @unique
+  password   String
+  avatar     String?
+  bio        String?
+  experience String?
+  website    String?
+  followers  Follows[] @relation("following")
+  following  Follows[] @relation("follower")
+  posts      Post[]
+  like       Like[]
+  comments   Comment[]
+  joined     DateTime  @default(now())
+}
+
+model Post {
+  id           Int       @id @default(autoincrement())
+  publishedAt  DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  authorId     Int
+  imageUrl     String?
+  content      String
+  likeCount    Int       @default(0)
+  commentCount Int       @default(0)
+  like         Like[]
+  comments     Comment[]
+  author       User      @relation(fields: [authorId], references: [id])
+}
+
+model Follows {
+  follower    User @relation(fields: [followerId], references: [id], name: "follower")
+  followerId  Int
+  following   User @relation(fields: [followingId], references: [id], name: "following")
+  followingId Int
+
+  @@id([followerId, followingId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  createdAt DateTime @default(now())
+  content   String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+}
+
+model Like {
+  userid Int
+  postid Int
+  user   User @relation(fields: [userid], references: [id], onDelete: Cascade)
+  post   Post @relation(fields: [postid], references: [id], onDelete: Cascade)
+  @@id([userid, postid])
+}
