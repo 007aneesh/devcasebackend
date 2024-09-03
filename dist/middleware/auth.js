@@ -13,6 +13,9 @@ const createJwtToken = (user) => {
 exports.createJwtToken = createJwtToken;
 const verifyToken = (req, res, next) => {
     let token = req.cookies.token;
+    if (!token) {
+        return res.status(401).json({ msg: "Please login first!" });
+    }
     let decode = jsonwebtoken_1.default.verify(token, secretKey);
     if (decode) {
         req.body.user = decode;

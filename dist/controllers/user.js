@@ -14,18 +14,29 @@ const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const signUp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, username, email, password } = req.body;
-    if (!username || !email || !password) {
+    if (!name || !username || !email || !password) {
         return res.status(400).json({ msg: "Please fill out all fields" });
     }
-    let user = yield prisma.user.create({
-        data: {
-            name,
-            username,
-            email,
-            password,
-        },
-    });
-    res.status(201).json({ user });
+    try {
+        let existingUser = yield prisma.user.findUnique({
+            where: { username: username, email: email },
+        });
+        if (existingUser) {
+            return res.status(400).json({ error: "User already exists" });
+        }
+        let user = yield prisma.user.create({
+            data: {
+                name,
+                username,
+                email,
+                password,
+            },
+        });
+        res.status(201).json({ message: "User registered successfully", user });
+    }
+    catch (error) {
+        res.status(500).json({ error: "An error occurred during registration" });
+    }
 });
 exports.signUp = signUp;
 const allUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

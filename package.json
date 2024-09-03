@@ -2,19 +2,16 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "nodemon index.ts",
-    "build": "sudo rm -rf dist && tsc",
+    "vercel-build": "npm run build",
+    "build": "tsc",
+    "start": "node dist/index.js",
     "ts.check": "tsc --project tsconfig.json",
     "add-build": "git add dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "pre-commit": [
-    "ts.check",
-    "build",
-    "add-build"
-  ],
+  "pre-commit": ["ts.check", "build", "add-build"],
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -38,6 +35,7 @@
     "@types/react": "^18.3.3",
     "@types/whatwg-url": "^11.0.5",
     "nodemon": "^3.1.0",
+    "pre-commit": "^1.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
   }

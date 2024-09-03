@@ -21,7 +21,7 @@ const likeController = async (req: Request, res: Response) => {
   });
 
   if (existingLike) {
-    const unlikePost = await prisma.post.update({
+    await prisma.post.update({
       where: { id: postId },
       data: {
         likeCount: { decrement: 1 },
@@ -59,6 +59,7 @@ const likeController = async (req: Request, res: Response) => {
     }
   }
 };
+
 const getLikeNumber = async (req: Request, res: Response) => {
   const postId = Number(req.params.postId);
 
@@ -70,11 +71,42 @@ const getLikeNumber = async (req: Request, res: Response) => {
       likeCount: true,
       like: {
         select: {
-          userid: true
-        }
-      }
+          userid: true,
+        },
+      },
     },
   });
   res.send(likes);
 };
-export { likeController, getLikeNumber };
+
+const checkUserLikeStatus = async (req: Request, res: Response) => {
+  const postId = Number(req.params.postId);
+  const user = req.body.user;
+  const userid = user?.id;
+
+  if (!user) {
+    return res.status(401).json({ message: "Please login first!" });
+  }
+
+  try {
+    const existingLike = await prisma.like.findUnique({
+      where: {
+        userid_postid: {
+          userid: userid,
+          postid: postId,
+        },
+      },
+    });
+    if (existingLike) {
+      return res
+        .status(200)
+        .json({ success: true, message: "Already liked" });
+    }
+    return res.status(200).json({ success: false, message: "Not liked" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to check like status" });
+  }
+};
+
+export { likeController, getLikeNumber, checkUserLikeStatus };

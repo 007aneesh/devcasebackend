@@ -18,6 +18,9 @@ export const verifyToken = (
   next: NextFunction
 ) => {
   let token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ msg: "Please login first!" });
+  }
   let decode = jwt.verify(token, secretKey);
   if (decode) {
     req.body.user = decode;

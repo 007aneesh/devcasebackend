@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLikeNumber = exports.likeController = void 0;
+exports.checkUserLikeStatus = exports.getLikeNumber = exports.likeController = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const likeController = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -28,7 +28,7 @@ const likeController = (req, res) => __awaiter(void 0, void 0, void 0, function*
         },
     });
     if (existingLike) {
-        const unlikePost = yield prisma.post.update({
+        yield prisma.post.update({
             where: { id: postId },
             data: {
                 likeCount: { decrement: 1 },
@@ -77,11 +77,40 @@ const getLikeNumber = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             likeCount: true,
             like: {
                 select: {
-                    userid: true
-                }
-            }
+                    userid: true,
+                },
+            },
         },
     });
     res.send(likes);
 });
 exports.getLikeNumber = getLikeNumber;
+const checkUserLikeStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const postId = Number(req.params.postId);
+    const user = req.body.user;
+    const userid = user === null || user === void 0 ? void 0 : user.id;
+    if (!user) {
+        return res.status(401).json({ message: "Please login first!" });
+    }
+    try {
+        const existingLike = yield prisma.like.findUnique({
+            where: {
+                userid_postid: {
+                    userid: userid,
+                    postid: postId,
+                },
+            },
+        });
+        if (existingLike) {
+            return res
+                .status(200)
+                .json({ success: true, message: "Already liked" });
+        }
+        return res.status(200).json({ success: false, message: "Not liked" });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Failed to check like status" });
+    }
+});
+exports.checkUserLikeStatus = checkUserLikeStatus;

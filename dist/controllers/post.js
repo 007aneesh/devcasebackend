@@ -15,13 +15,14 @@ const prisma = new client_1.PrismaClient();
 const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = req.body.user;
     if (!user) {
-        throw new Error("Please login again!");
+        return res.status(401).json({ msg: "Please login first!" });
     }
     let authorId = user.id;
     const { imageUrl, content } = req.body;
     let post = yield prisma.post.create({
         data: {
             authorId,
+            authorUserName: user.username,
             imageUrl,
             content,
         },
@@ -30,7 +31,11 @@ const createPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.createPost = createPost;
 const getAllPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const posts = yield prisma.post.findMany();
+    const posts = yield prisma.post.findMany({
+        orderBy: {
+            publishedAt: "desc",
+        },
+    });
     res.send(posts);
 });
 exports.getAllPosts = getAllPosts;
@@ -42,6 +47,9 @@ const userPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const posts = yield prisma.post.findMany({
         where: {
             authorId: user.id,
+        },
+        orderBy: {
+            publishedAt: "desc",
         },
     });
     res.send(posts);
